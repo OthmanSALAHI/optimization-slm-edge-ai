@@ -1,0 +1,9 @@
+seed: 42
+
+data:
+  dataset_name: yahma/alpaca-cleaned
+  dataset_split: train
+  processed_dir: data/processed
+  train_size: 2000
+  val_size: 500
+  test_size: 500

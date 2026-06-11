@@ -1,0 +1,10 @@
+{
+  "total_original_examples": 51760,
+  "train_size": 2000,
+  "validation_size": 500,
+  "test_size": 500,
+  "average_source_length": 17.14,
+  "average_target_length": 109.21,
+  "max_source_length": 279,
+  "max_target_length": 450
+}
