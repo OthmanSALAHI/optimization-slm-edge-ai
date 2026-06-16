@@ -134,7 +134,7 @@ data/
 datasets/
 !data/.gitkeep
 !datasets/.gitkeep
-
+*.safetensors
 # IDE
 .vscode/
 .idea/
