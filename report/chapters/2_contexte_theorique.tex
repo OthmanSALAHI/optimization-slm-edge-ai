@@ -1,0 +1,87 @@
+\chapter{Theoretical Background}
+
+\vspace*{1cm}
+
+This chapter presents the main theoretical concepts used in the project. The work
+is based on three connected ideas: Small Language Models, fine-tuning, and
+optimization for Edge AI constraints. Understanding these concepts is necessary
+before describing the implementation and the experimental comparison.
+
+\section{Small Language Models}
+
+Small Language Models are language models designed with a reduced number of
+parameters compared with Large Language Models. Their objective is to provide
+useful natural language processing capabilities while requiring fewer
+computational resources. This makes them more suitable for limited environments,
+such as personal computers, embedded systems, mobile devices, and edge platforms.
+
+\vspace*{0.5cm}
+
+In this project, the selected model is \texttt{google/flan-t5-small}. It belongs
+to the T5 family, where many language tasks are represented as text-to-text
+problems. The FLAN version is instruction-tuned, which means that it has already
+been trained to follow natural language instructions. This makes it a good
+candidate for experiments based on instruction-following data.
+
+\section{Fine-Tuning}
+
+Fine-tuning is the process of adapting a pre-trained model to a specific task or
+dataset. Instead of training a model from the beginning, fine-tuning starts from
+existing learned parameters and updates them using a smaller target dataset. This
+approach reduces training cost and usually improves performance on the target
+task.
+
+\vspace*{0.5cm}
+
+For instruction tuning, each training example contains an input prompt and an
+expected answer. In this project, the prompt is stored in the \texttt{source\_text}
+column, while the expected answer is stored in the \texttt{target\_text} column.
+The model learns to generate the target answer from the given instruction-based
+source text.
+
+\section{Edge AI Constraints}
+
+Edge AI consists of deploying artificial intelligence models directly on local
+devices instead of relying only on cloud computing. This can improve latency,
+privacy, autonomy, and availability. However, edge devices generally have limited
+memory, processing power, and energy capacity.
+
+\vspace*{0.5cm}
+
+Because of these constraints, the evaluation of a language model should not be
+limited to accuracy or loss. It is also important to consider model size,
+inference time, latency, memory consumption, and energy usage. These criteria help
+determine whether a model is practical for real deployment on constrained
+hardware.
+
+\section{Optimization in Deep Learning}
+
+Optimization algorithms are used to update the model parameters during training.
+The objective is to minimize the loss function, which measures the difference
+between the model prediction and the expected output. The choice of optimizer can
+strongly affect training speed, stability, memory usage, and final performance.
+
+\vspace*{0.5cm}
+
+This project studies several optimization methods. Stochastic Gradient Descent is
+a simple and classical method based on gradient updates. SGD with momentum
+improves the basic method by accumulating part of the previous update direction.
+Adam uses adaptive learning rates and is widely used for transformer training.
+L-BFGS is a quasi-Newton method that approximates second-order information, but it
+is usually expensive for large neural networks. Newton-CG is discussed
+theoretically because it requires second-order information that is not practical
+for this fine-tuning pipeline.
+
+\section{Model Compression Perspective}
+
+Model compression aims to reduce the size and computational cost of a model while
+preserving as much performance as possible. Common compression techniques include
+quantization, pruning, and knowledge distillation. Although this project mainly
+focuses on fine-tuning and optimizer comparison, the collected metrics provide a
+baseline for future compression experiments.
+
+\vspace*{0.5cm}
+
+The theoretical foundation of this work is therefore centered on finding a balance
+between model quality and efficiency. This balance is essential when preparing
+Small Language Models for Edge AI applications.

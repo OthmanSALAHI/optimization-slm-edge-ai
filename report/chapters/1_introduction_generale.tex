@@ -1,0 +1,47 @@
+\chapter{General Introduction}
+
+\vspace*{1cm}
+
+Artificial Intelligence has become an important technology in many modern
+applications, especially with the development of language models capable of
+understanding instructions and generating natural language responses. However,
+large language models usually require significant computational resources, memory,
+and energy. These requirements make their deployment difficult on edge devices,
+where hardware capacity is limited.
+
+\vspace*{0.5cm}
+
+Edge AI refers to the execution of artificial intelligence models directly on
+local devices such as smartphones, embedded systems, sensors, or small computing
+boards. This approach reduces dependence on cloud servers, improves response time,
+and can increase privacy because data does not always need to be sent to remote
+infrastructure. Nevertheless, deploying AI models on edge devices requires models
+that are compact, efficient, and fast during inference.
+
+\vspace*{0.5cm}
+
+For this reason, Small Language Models represent an interesting solution. They are
+lighter than large-scale models while still being able to perform useful language
+tasks after fine-tuning. In this project, the model \texttt{google/flan-t5-small}
+is used as a compact instruction-following model. The objective is to adapt it to
+an instruction-tuning dataset and analyze how different optimization algorithms
+affect the training process and the final performance.
+
+\vspace*{0.5cm}
+
+The project focuses on the comparison of several optimization methods, including
+Stochastic Gradient Descent, SGD with momentum, Adam, and L-BFGS. Newton-CG is
+also considered from a theoretical point of view, but it is not implemented because
+it is not practical for standard transformer fine-tuning using PyTorch. The
+comparison is based not only on model quality, but also on criteria related to
+Edge AI, such as training speed, memory consumption, inference latency, model size,
+and energy consumption when available.
+
+\vspace*{0.5cm}
+
+The main goal of this report is to present the design and implementation of the
+fine-tuning pipeline, explain the optimization algorithms studied, and evaluate
+their relevance for efficient Small Language Model adaptation. This work also
+serves as a first step toward future compression techniques, such as quantization
+or pruning, which can further improve the suitability of language models for Edge
+AI applications.

@@ -1,0 +1,182 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\graphicspath{{../metrics/}{metrics/}{../assets/figures/}{assets/figures/}{./}}
+
+\geometry{margin=2.5cm}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue
+}
+
+% ─── Python code style ────────────────────────────────────────────────────────
+\lstdefinestyle{pythonStyle}{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue!70!black}\bfseries,
+    stringstyle=\color{green!40!black},
+    commentstyle=\color{gray}\itshape,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    frame=single,
+    breaklines=true,
+    tabsize=4,
+    captionpos=b,
+    showstringspaces=false
+}
+
+% ─── JSON / shell style ───────────────────────────────────────────────────────
+\lstdefinestyle{jsonStyle}{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue!70!black},
+    stringstyle=\color{green!40!black},
+    morestring=[b]",
+    frame=single,
+    breaklines=true,
+    tabsize=2,
+    captionpos=b,
+    showstringspaces=false
+}
+
+% ─── Colour definitions ───────────────────────────────────────────────────────
+\definecolor{droughtRed}{RGB}{220,38,38}
+\definecolor{normalGreen}{RGB}{34,197,94}
+\definecolor{accentBlue}{RGB}{59,130,246}
+\definecolor{sectionGray}{RGB}{71,85,105}
+\definecolor{chapterBlue}{RGB}{0,45,105}
+
+\setlength{\headheight}{15pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{chapterBlue}{\textbf{Optimisation}}}
+\fancyhead[R]{\textcolor{chapterBlue}{\textbf{2025--2026}}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.5pt}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyhead[L]{\textcolor{chapterBlue}{\textbf{Optimisation}}}
+    \fancyhead[R]{\textcolor{chapterBlue}{\textbf{2025--2026}}}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0.5pt}
+    \renewcommand{\footrulewidth}{0.5pt}
+}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}
+  {\color{chapterBlue}\chaptertitlename\ \thechapter}
+  {20pt}
+  {\Huge\bfseries}
+
+\begin{document}
+
+% ══════════════════════════════════════════════════════════════════════════════
+%  TITLE PAGE
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{titlepage}
+    \centering
+    \vspace*{0.5cm}
+
+    \includegraphics[width=0.42\textwidth]{logo_university.png}\\[1cm]
+
+    {\Large \textbf{Faculté des Sciences Ben M'Sik}}\\[0.3cm]
+    {\large Université Hassan II de Casablanca}\\[2cm]
+
+    {\Huge \textbf{Academic Project Report}}\\[0.4cm]
+    {\LARGE Excellence Master Artificial Intelligence}\\[1.5cm]
+
+    \rule{0.85\textwidth}{0.5pt}\\[0.4cm]
+    {\Large \textbf{Optimization and Compression of Small Language Models\\[0.2cm]
+    for Edge AI Applications}}\\[0.3cm]
+    {\large \textit{Light tuning instructions: adapt an SLM by following simple instructions}}\\[0.4cm]
+    \rule{0.85\textwidth}{0.5pt}
+
+    \vfill
+
+    \begin{tabular}{l@{\hskip 6cm}l}
+        \textbf{Prepared by}  & \textbf{Supervisor}       \\[0.3cm]
+        Othman Salahi         & Pr. Benabbou Faouzia      \\
+        Aymene Chouki         &                           \\
+        Malak Houali          &                           \\
+        Hiba Dellaji          &                           \\
+    \end{tabular}
+
+    \vfill
+
+     \begin{center}
+        \normalsize{Course:} Optimisation\\[0.3cm]
+        \normalsize{Academic year:} 2025--2026
+    \end{center}
+
+\end{titlepage}
+
+\pagenumbering{arabic}
+\tableofcontents
+\clearpage
+\listoffigures
+\newpage
+
+\input{chapters/0_abstract}
+
+\clearpage
+\input{chapters/0_abbreviations}
+
+\clearpage
+\input{chapters/1_introduction_generale}
+
+\clearpage
+\input{chapters/2_contexte_theorique}
+
+\clearpage
+\input{chapters/3_presentation_du_projet}
+
+\clearpage
+\input{chapters/4_preparation_des_donnees}
+
+% \clearpage
+% \input{chapters/5_methodologie_fine_tuning}
+
+% \clearpage
+% \input{chapters/6_algorithmes_optimisation}
+
+% \clearpage
+% \input{chapters/7_criteres_evaluation}
+
+% \clearpage
+% \input{chapters/8_resultats_experimentaux}
+
+% \clearpage
+% \input{chapters/9_discussion}
+
+% \clearpage
+% \input{chapters/10_limites_du_travail}
+
+% \clearpage
+% \input{chapters/11_conclusion_generale}
+
+% \appendix
+% \clearpage
+% \input{chapters/12_annexes}
+
+\end{document}
+

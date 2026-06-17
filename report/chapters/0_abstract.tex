@@ -1,0 +1,37 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+\vspace*{2cm}
+
+
+This project focuses on the optimization and compression of Small Language Models
+for Edge AI applications. The main objective is to prepare and fine-tune a compact
+instruction-following language model, \texttt{google/flan-t5-small}, and to study
+the impact of different optimization algorithms on training quality and resource
+efficiency.
+
+\vspace*{0.5cm}
+
+The dataset used in this work is \texttt{yahma/alpaca-cleaned}, which was processed
+into training, validation, and test subsets. Each example was transformed into an
+instruction-tuning format composed of a source prompt and a target answer. The
+fine-tuning pipeline was then designed to train the model using several optimizers,
+including Stochastic Gradient Descent, SGD with momentum, Adam, and L-BFGS. Newton-CG
+is also discussed from a theoretical perspective because it is not practical for
+standard transformer fine-tuning in this context.
+
+\vspace*{0.5cm}
+
+The comparison is based on criteria that are important for Edge AI deployment:
+validation loss, perplexity, training time, training speed, memory consumption,
+model size, inference time, latency, and energy consumption when power telemetry is
+available. These metrics make it possible to analyze the tradeoff between model
+quality and computational efficiency.
+
+\vspace*{0.5cm}
+
+This report presents the project context, the data preparation process, the
+fine-tuning methodology, the optimization algorithms studied, and the evaluation
+strategy. The final goal is to identify which optimization approach provides the
+best compromise for adapting a Small Language Model under the constraints of Edge
+AI environments.
