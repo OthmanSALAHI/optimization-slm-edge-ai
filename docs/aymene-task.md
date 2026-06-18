@@ -43,10 +43,12 @@ Newton-CG is documented as unsupported in the code because it is not practical f
 Run one optimizer:
 
 ```bash
+
 python src/train.py --optimizer sgd
 python src/train.py --optimizer sgd_momentum
 python src/train.py --optimizer adam
 python src/train.py --optimizer lbfgs
+
 ```
 
 Run all runnable optimizers:

@@ -1,0 +1,154 @@
+\chapter{Evaluation Criteria}
+
+\vspace*{1cm}
+
+The evaluation of a fine-tuned language model should not be limited to the final
+training loss. Since this project targets Edge AI applications, the comparison
+must also include efficiency-related criteria. A model that gives good prediction
+quality but requires high memory, long inference time, or excessive energy may
+not be suitable for deployment on constrained devices.
+
+\section{Validation Loss}
+
+Validation loss measures how well the model performs on data that was not used
+for parameter updates during training. It is one of the main indicators of model
+generalization. A lower validation loss usually means that the model is better at
+predicting the expected outputs on unseen examples.
+
+\vspace*{0.5cm}
+
+In this project, validation loss is used to compare the fine-tuning quality of
+the different optimizers. It helps identify whether an optimizer improves the
+model or causes unstable training.
+
+\section{Perplexity}
+
+Perplexity is a common metric in language modeling. It is derived from the loss
+and gives an interpretation of how uncertain the model is when predicting the next
+tokens. Lower perplexity indicates better language modeling performance.
+
+\vspace*{0.5cm}
+
+Perplexity can be computed from the validation loss as:
+
+\begin{equation}
+    \text{Perplexity} = e^{\text{Validation Loss}}
+\end{equation}
+
+This metric is useful because it gives another view of model quality. However, it
+must be interpreted together with efficiency metrics when the target environment
+is Edge AI.
+
+\section{Training Time}
+
+Training time represents the total time required to fine-tune the model for a
+given optimizer. This metric is important because some algorithms may produce good
+results but require much longer execution time.
+
+\vspace*{0.5cm}
+
+For example, L-BFGS may require several evaluations of the loss during one update
+step, which can increase training time compared with optimizers such as Adam. In
+an experimental comparison, training time helps evaluate the practical cost of
+each optimizer.
+
+\section{Training Speed}
+
+Training speed is measured as the number of processed examples per second. It
+provides a normalized view of how fast the training process runs.
+
+\vspace*{0.5cm}
+
+This metric is useful when comparing optimizers because it shows how efficiently
+each method uses the available hardware. A higher training speed is generally
+better, especially when experiments must be repeated many times.
+
+\section{Memory Consumption}
+
+Memory consumption measures the amount of memory used during training. For GPU
+training, this usually includes the allocated and reserved GPU memory. This
+criterion is very important for Edge AI because target devices often have limited
+available memory.
+
+\vspace*{0.5cm}
+
+An optimizer may require additional memory to store internal states. For example,
+Adam stores moving averages of gradients and squared gradients. L-BFGS also keeps
+a history of previous updates. Therefore, memory usage can differ significantly
+between optimizers.
+
+\section{Model Size}
+
+Model size represents the storage space required by the final fine-tuned model.
+Smaller models are easier to deploy on edge devices because they require less disk
+space and can be loaded more easily into memory.
+
+\vspace*{0.5cm}
+
+In this project, model size is measured after saving the fine-tuned model. It is
+used as a baseline for future compression experiments such as quantization or
+pruning.
+
+\section{Inference Time and Latency}
+
+Inference time measures the time required by the model to generate outputs for a
+set of examples. Latency represents the average response time per sample. These
+two metrics are essential for real-time or interactive Edge AI applications.
+
+\vspace*{0.5cm}
+
+Low latency is especially important when the model must respond quickly to user
+requests. Even if two optimizers produce similar validation loss, the one that
+leads to faster inference can be more suitable for practical deployment.
+
+\section{Energy Consumption}
+
+Energy consumption is another important criterion for Edge AI. Devices such as
+mobile phones, sensors, and embedded boards often operate with limited battery
+capacity. A model that consumes less energy is more appropriate for long-term or
+portable use.
+
+\vspace*{0.5cm}
+
+In this project, energy consumption can be estimated when NVIDIA power telemetry
+is available. If telemetry is not available, the metric can be left unavailable
+and discussed as a limitation.
+
+\section{Compression and Performance Tradeoff}
+
+The final criterion is the compression and performance tradeoff. The fine-tuned
+models produced by this project are considered baselines for future compression
+experiments. Compression techniques aim to reduce model size and computational
+cost while preserving acceptable performance.
+
+\vspace*{0.5cm}
+
+The optimizer comparison therefore helps determine which fine-tuned model is the
+best starting point for later compression. A good candidate should combine strong
+validation performance with reasonable memory usage, latency, and model size.
+
+\section{Summary of Metrics}
+
+The main evaluation criteria are summarized in Table~\ref{tab:evaluation_metrics}.
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        \textbf{Metric} & \textbf{Purpose} \\
+        \midrule
+        Validation loss & Measures model generalization on unseen data. \\
+        Perplexity & Evaluates language modeling uncertainty. \\
+        Training time & Measures total optimization cost. \\
+        Training speed & Measures examples processed per second. \\
+        Memory consumption & Evaluates hardware resource usage. \\
+        Model size & Measures storage cost of the fine-tuned model. \\
+        Inference time & Measures total generation time. \\
+        Latency & Measures average response time per sample. \\
+        Energy consumption & Estimates power efficiency when telemetry is available. \\
+        Compression tradeoff & Prepares comparison with future compressed models. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Evaluation criteria used to compare the optimizers.}
+    \label{tab:evaluation_metrics}
+\end{table}
