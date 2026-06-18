@@ -79,12 +79,18 @@ def tokenize_dataset(dataframe, tokenizer, config):
     )
 
 
-def create_dataloader(dataset, batch_size, shuffle):
+def create_dataloader(dataset, batch_size, shuffle, num_workers=0, pin_memory=False, seed=42):
     """Create a DataLoader for training or validation."""
+    generator = torch.Generator()
+    generator.manual_seed(seed)
+
     return DataLoader(
         dataset,
         batch_size=batch_size,
         shuffle=shuffle,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        generator=generator if shuffle else None,
     )
 
 
@@ -109,3 +115,15 @@ def save_training_results(metrics, metrics_dir, optimizer_name):
         json.dump(metrics, file, indent=2, ensure_ascii=False)
 
     return metrics_path
+
+
+def save_prediction_preview(predictions, metrics_dir, optimizer_name):
+    """Save a small prediction preview for qualitative inspection."""
+    output_dir = Path(metrics_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    preview_path = output_dir / f"predictions_{optimizer_name}.json"
+    with open(preview_path, "w", encoding="utf-8") as file:
+        json.dump(predictions, file, indent=2, ensure_ascii=False)
+
+    return preview_path

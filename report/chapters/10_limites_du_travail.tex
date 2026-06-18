@@ -1,0 +1,98 @@
+\chapter{Limitations of the Work}
+
+\vspace*{1cm}
+
+Although the project provides a useful comparison of optimization algorithms for
+fine-tuning a Small Language Model, several limitations must be considered when
+interpreting the results. These limitations are related to the dataset size, the
+benchmark duration, the hardware environment, and the practical constraints of
+the tested optimization methods.
+
+\section{Limited Dataset Size}
+
+The dataset used in this project was intentionally reduced in size in order to
+make the experiments lighter and easier to execute. The processed training set
+contains 2000 examples, while the validation and test sets contain 500 examples
+each.
+
+\vspace*{0.5cm}
+
+This reduced dataset is sufficient for experimentation and optimizer comparison,
+but it does not represent the full scale of instruction-tuning. Using a larger
+dataset could lead to more stable training and more reliable conclusions about
+the final model quality.
+
+\section{Short Benchmark Duration}
+
+The experimental benchmark was executed for 10 training steps with a batch size
+of 4. This setup makes it possible to compare the early behavior of the
+optimizers, but it is not enough to fully train the model.
+
+\vspace*{0.5cm}
+
+As a result, the reported losses and efficiency metrics should be interpreted as
+a short benchmark rather than a complete fine-tuning experiment. A longer
+training run with more epochs would be necessary to confirm the final ranking of
+the optimizers.
+
+\section{Hardware Dependency}
+
+The fine-tuning experiments depend strongly on the hardware used. The results
+were obtained on a machine equipped with a performant GPU. Metrics such as
+training time, throughput, latency, and VRAM usage can change significantly on a
+different GPU or on a CPU.
+
+\vspace*{0.5cm}
+
+Therefore, the numerical results are specific to the execution environment. The
+general trends are still useful, but exact values should not be considered
+universal for all machines.
+
+\section{Energy Measurement Limitation}
+
+Energy consumption is an important metric for Edge AI applications. However,
+accurate energy measurement requires access to reliable power telemetry. When
+this information is not available, the energy consumption metric cannot be fully
+evaluated.
+
+\vspace*{0.5cm}
+
+In this project, the main comparison focuses on loss, latency, throughput, memory
+usage, and model size. Energy consumption remains an important direction for
+future experiments, especially when testing deployment on real edge hardware.
+
+\section{Practical Limits of Second-Order Methods}
+
+L-BFGS and Newton-CG are included because they are important optimization methods
+from a theoretical point of view. However, they are not always practical for
+transformer fine-tuning. They require more computation and memory than classical
+first-order methods.
+
+\vspace*{0.5cm}
+
+The benchmark confirms this limitation. L-BFGS and Newton-CG show high latency
+and high VRAM usage, which makes them less suitable for efficient language model
+adaptation. Their inclusion remains useful for academic comparison, but they are
+not the most realistic choices for deployment-oriented fine-tuning.
+
+\section{No Final Compression Stage}
+
+The title of the project includes optimization and compression of Small Language
+Models. In the current implementation, the main completed part is the
+fine-tuning and optimizer comparison. Compression techniques such as quantization,
+pruning, or knowledge distillation are identified as future work.
+
+\vspace*{0.5cm}
+
+The results therefore provide a baseline for compression rather than a full
+compressed model comparison. Future experiments should apply compression methods
+to the best fine-tuned models and evaluate the impact on size, latency, memory,
+and quality.
+
+\section{Conclusion}
+
+These limitations do not invalidate the project results, but they define the
+scope of the conclusions. The work provides a controlled comparison of optimizer
+behavior on \texttt{google/flan-t5-small}, while future work should extend the
+experiments with longer training, larger datasets, real energy measurements, and
+actual compression techniques.

@@ -1,9 +1,14 @@
 import argparse
+import csv
+import json
+import math
 import time
 from pathlib import Path
 
 import torch
+from torch.nn.utils import clip_grad_norm_
 from tqdm.auto import tqdm
+from transformers import get_scheduler
 
 from metrics import (
     GpuEnergyTracker,
@@ -28,6 +33,7 @@ from train_utils import (
     create_dataloader,
     create_trainer,
     load_processed_dataset,
+    save_prediction_preview,
     save_training_results,
     tokenize_dataset,
 )
@@ -36,7 +42,7 @@ from utils import ensure_dir, set_seed
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Fine-tune google/flan-t5-small and compare optimizers."
+        description="Fine-tune google/flan-t5-small and compare optimizers fairly."
     )
     parser.add_argument(
         "--optimizer",
@@ -56,9 +62,18 @@ def parse_args():
     parser.add_argument("--momentum", type=float, default=TrainingConfig.momentum)
     parser.add_argument("--batch_size", type=int, default=TrainingConfig.batch_size)
     parser.add_argument("--epochs", type=int, default=TrainingConfig.epochs)
+    parser.add_argument(
+        "--gradient_accumulation_steps",
+        type=int,
+        default=TrainingConfig.gradient_accumulation_steps,
+    )
+    parser.add_argument("--max_grad_norm", type=float, default=TrainingConfig.max_grad_norm)
     parser.add_argument("--max_input_length", type=int, default=TrainingConfig.max_input_length)
     parser.add_argument("--max_target_length", type=int, default=TrainingConfig.max_target_length)
     parser.add_argument("--seed", type=int, default=TrainingConfig.seed)
+    parser.add_argument("--scheduler_type", default=TrainingConfig.scheduler_type)
+    parser.add_argument("--warmup_ratio", type=float, default=TrainingConfig.warmup_ratio)
+    parser.add_argument("--num_workers", type=int, default=TrainingConfig.num_workers)
     parser.add_argument("--max_train_examples", type=int, default=None)
     parser.add_argument("--max_validation_examples", type=int, default=None)
     parser.add_argument("--max_eval_batches", type=int, default=None)
@@ -73,6 +88,11 @@ def parse_args():
         "--lbfgs_history_size",
         type=int,
         default=TrainingConfig.lbfgs_history_size,
+    )
+    parser.add_argument(
+        "--disable_amp",
+        action="store_true",
+        help="Disable mixed precision. AMP is enabled by default on CUDA.",
     )
     parser.add_argument(
         "--allow_cpu",
@@ -97,10 +117,16 @@ def build_config(args, optimizer_name):
         momentum=args.momentum,
         batch_size=args.batch_size,
         epochs=args.epochs,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        max_grad_norm=args.max_grad_norm,
         max_input_length=args.max_input_length,
         max_target_length=args.max_target_length,
         seed=args.seed,
         require_gpu=not args.allow_cpu,
+        use_amp=not args.disable_amp,
+        num_workers=args.num_workers,
+        scheduler_type=args.scheduler_type,
+        warmup_ratio=args.warmup_ratio,
         max_train_examples=args.max_train_examples,
         max_validation_examples=args.max_validation_examples,
         max_eval_batches=args.max_eval_batches,
@@ -112,21 +138,57 @@ def build_config(args, optimizer_name):
 
 
 def move_batch_to_device(batch, device):
-    return {key: value.to(device) for key, value in batch.items()}
+    return {key: value.to(device, non_blocking=True) for key, value in batch.items()}
 
 
-def train_one_epoch(model, optimizer, dataloader, device, optimizer_name):
+def count_tokens(batch):
+    return int(batch["attention_mask"].sum().item())
+
+
+def create_lr_scheduler(optimizer, config, steps_per_epoch):
+    if config.optimizer_name == "lbfgs":
+        return None
+
+    total_steps = steps_per_epoch * config.epochs
+    warmup_steps = int(total_steps * config.warmup_ratio)
+    return get_scheduler(
+        name=config.scheduler_type,
+        optimizer=optimizer,
+        num_warmup_steps=warmup_steps,
+        num_training_steps=total_steps,
+    )
+
+
+def train_one_epoch(
+    model,
+    optimizer,
+    scheduler,
+    dataloader,
+    device,
+    config,
+    scaler,
+):
     model.train()
+    optimizer.zero_grad(set_to_none=True)
+
     batch_losses = []
+    step_latencies = []
+    processed_tokens = 0
+    optimizer_steps = 0
 
-    progress_bar = tqdm(dataloader, desc=f"Training ({optimizer_name})")
-    for batch in progress_bar:
+    progress_bar = tqdm(dataloader, desc=f"Training ({config.optimizer_name})")
+    for batch_index, batch in enumerate(progress_bar):
         batch = move_batch_to_device(batch, device)
+        processed_tokens += count_tokens(batch)
 
-        if optimizer_name == "lbfgs":
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+        step_start = time.perf_counter()
+
+        if config.optimizer_name == "lbfgs":
 
             def closure():
-                optimizer.zero_grad()
+                optimizer.zero_grad(set_to_none=True)
                 outputs = model(**batch)
                 loss = outputs.loss
                 loss.backward()
@@ -134,18 +196,58 @@ def train_one_epoch(model, optimizer, dataloader, device, optimizer_name):
 
             loss = optimizer.step(closure)
             loss_value = loss.item() if torch.is_tensor(loss) else float(loss)
+            optimizer_steps += 1
         else:
-            optimizer.zero_grad()
-            outputs = model(**batch)
-            loss = outputs.loss
-            loss.backward()
-            optimizer.step()
-            loss_value = loss.item()
+            with torch.autocast(
+                device_type=device.type,
+                dtype=torch.float16,
+                enabled=config.use_amp and device.type == "cuda",
+            ):
+                outputs = model(**batch)
+                loss = outputs.loss / config.gradient_accumulation_steps
+
+            if scaler is not None:
+                scaler.scale(loss).backward()
+            else:
+                loss.backward()
+
+            should_step = (
+                (batch_index + 1) % config.gradient_accumulation_steps == 0
+                or (batch_index + 1) == len(dataloader)
+            )
+            if should_step:
+                if scaler is not None:
+                    scaler.unscale_(optimizer)
+                    clip_grad_norm_(model.parameters(), config.max_grad_norm)
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    clip_grad_norm_(model.parameters(), config.max_grad_norm)
+                    optimizer.step()
+
+                if scheduler is not None:
+                    scheduler.step()
+
+                optimizer.zero_grad(set_to_none=True)
+                optimizer_steps += 1
+
+            loss_value = loss.item() * config.gradient_accumulation_steps
+
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+        step_end = time.perf_counter()
 
         batch_losses.append(loss_value)
+        step_latencies.append(step_end - step_start)
         progress_bar.set_postfix({"loss": f"{loss_value:.4f}"})
 
-    return compute_loss(batch_losses)
+    epoch_time = sum(step_latencies)
+    return {
+        "train_loss": compute_loss(batch_losses),
+        "avg_step_ms": (epoch_time / len(step_latencies)) * 1000 if step_latencies else None,
+        "tokens_per_second": processed_tokens / epoch_time if epoch_time > 0 else None,
+        "optimizer_steps": optimizer_steps,
+    }
 
 
 @torch.no_grad()
@@ -161,7 +263,11 @@ def evaluate_model(model, dataloader, device, max_eval_batches=None):
         outputs = model(**batch)
         losses.append(outputs.loss.item())
 
-    return compute_loss(losses)
+    validation_loss = compute_loss(losses)
+    return {
+        "validation_loss": validation_loss,
+        "validation_perplexity": compute_perplexity(validation_loss),
+    }
 
 
 @torch.no_grad()
@@ -179,7 +285,7 @@ def measure_inference(model, tokenizer, dataframe, config, device):
         truncation=True,
         max_length=config.max_input_length,
     )
-    inputs = {key: value.to(device) for key, value in inputs.items()}
+    inputs = {key: value.to(device, non_blocking=True) for key, value in inputs.items()}
 
     if device.type == "cuda":
         torch.cuda.synchronize()
@@ -210,11 +316,10 @@ def measure_inference(model, tokenizer, dataframe, config, device):
             }
         )
 
-    inference_metrics = compute_inference_metrics(
-        total_time_seconds=end_time - start_time,
-        number_of_samples=len(samples),
+    return (
+        compute_inference_metrics(end_time - start_time, len(samples)),
+        preview,
     )
-    return inference_metrics, preview
 
 
 def prepare_directories(config):
@@ -222,6 +327,47 @@ def prepare_directories(config):
     ensure_dir(config.metrics_dir)
     ensure_dir(config.logs_dir)
     ensure_dir(config.checkpoints_dir)
+
+
+def summarize_metrics(metrics_dir):
+    """Create a CSV summary from all train_<optimizer>.json files."""
+    metrics_path = Path(metrics_dir)
+    rows = []
+
+    for file_path in sorted(metrics_path.glob("train_*.json")):
+        with open(file_path, "r", encoding="utf-8") as file:
+            metrics = json.load(file)
+
+        inference = metrics.get("inference", {})
+        memory = metrics.get("memory_usage", {})
+        rows.append(
+            {
+                "optimizer": metrics.get("optimizer_name"),
+                "final_train_loss": metrics.get("final_train_loss"),
+                "final_validation_loss": metrics.get("final_validation_loss"),
+                "final_validation_perplexity": metrics.get("final_validation_perplexity"),
+                "training_time_seconds": metrics.get("training_time_seconds"),
+                "training_examples_per_second": metrics.get("training_examples_per_second"),
+                "avg_step_ms": metrics.get("average_step_ms"),
+                "tokens_per_second": metrics.get("average_tokens_per_second"),
+                "gpu_max_allocated_mb": memory.get("gpu_max_allocated_mb"),
+                "gpu_max_reserved_mb": memory.get("gpu_max_reserved_mb"),
+                "final_model_size_mb": metrics.get("final_model_size_mb"),
+                "inference_time_seconds": inference.get("inference_time_seconds"),
+                "latency_ms_per_sample": inference.get("latency_ms_per_sample"),
+            }
+        )
+
+    if not rows:
+        return None
+
+    summary_file = metrics_path / "optimizer_summary.csv"
+    with open(summary_file, "w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+    return summary_file
 
 
 def train_with_optimizer(config):
@@ -250,6 +396,7 @@ def train_with_optimizer(config):
 
     print("Loading model.")
     model = load_model(config.model_name, device)
+    model.config.use_cache = False
     parameter_counts = count_model_parameters(model)
 
     print("Loading processed train and validation data.")
@@ -266,19 +413,38 @@ def train_with_optimizer(config):
     train_dataset = tokenize_dataset(train_dataframe, tokenizer, config)
     validation_dataset = tokenize_dataset(validation_dataframe, tokenizer, config)
 
+    pin_memory = device.type == "cuda"
     train_dataloader = create_dataloader(
         train_dataset,
         batch_size=config.batch_size,
         shuffle=True,
+        num_workers=config.num_workers,
+        pin_memory=pin_memory,
+        seed=config.seed,
     )
     validation_dataloader = create_dataloader(
         validation_dataset,
         batch_size=config.batch_size,
         shuffle=False,
+        num_workers=config.num_workers,
+        pin_memory=pin_memory,
+        seed=config.seed,
     )
 
-    print("Creating optimizer.")
+    print("Creating optimizer and scheduler.")
     optimizer = get_optimizer(model.parameters(), config)
+    steps_per_epoch = max(
+        1,
+        math.ceil(len(train_dataloader) / config.gradient_accumulation_steps),
+    )
+    scheduler = create_lr_scheduler(optimizer, config, steps_per_epoch)
+    amp_enabled = (
+        config.use_amp
+        and device.type == "cuda"
+        and config.optimizer_name != "lbfgs"
+    )
+    scaler = torch.cuda.amp.GradScaler(enabled=amp_enabled)
+
     trainer = create_trainer(
         model=model,
         optimizer=optimizer,
@@ -294,26 +460,27 @@ def train_with_optimizer(config):
 
     for epoch in range(config.epochs):
         print(f"\nEpoch {epoch + 1}/{config.epochs}")
-        train_loss = train_one_epoch(
-            trainer["model"],
-            trainer["optimizer"],
-            trainer["train_dataloader"],
-            device,
-            config.optimizer_name,
+        train_metrics = train_one_epoch(
+            model=trainer["model"],
+            optimizer=trainer["optimizer"],
+            scheduler=scheduler,
+            dataloader=trainer["train_dataloader"],
+            device=device,
+            config=config,
+            scaler=scaler,
         )
-        validation_loss = evaluate_model(
-            trainer["model"],
-            trainer["validation_dataloader"],
-            device,
+        validation_metrics = evaluate_model(
+            model=trainer["model"],
+            dataloader=trainer["validation_dataloader"],
+            device=device,
             max_eval_batches=config.max_eval_batches,
         )
 
         epoch_metrics.append(
             {
                 "epoch": epoch + 1,
-                "train_loss": train_loss,
-                "validation_loss": validation_loss,
-                "validation_perplexity": compute_perplexity(validation_loss),
+                **train_metrics,
+                **validation_metrics,
             }
         )
 
@@ -343,11 +510,10 @@ def train_with_optimizer(config):
     save_model(model, tokenizer, model_output_dir)
     final_model_size_mb = get_model_size_mb(model_output_dir)
 
-    final_train_loss = epoch_metrics[-1]["train_loss"] if epoch_metrics else None
-    final_validation_loss = epoch_metrics[-1]["validation_loss"] if epoch_metrics else None
-    final_validation_perplexity = (
-        epoch_metrics[-1]["validation_perplexity"] if epoch_metrics else None
-    )
+    final_epoch = epoch_metrics[-1] if epoch_metrics else {}
+    final_train_loss = final_epoch.get("train_loss")
+    final_validation_loss = final_epoch.get("validation_loss")
+    final_validation_perplexity = final_epoch.get("validation_perplexity")
 
     metrics = {
         "model_name": config.model_name,
@@ -355,9 +521,15 @@ def train_with_optimizer(config):
         "device": str(device),
         "epochs": config.epochs,
         "batch_size": config.batch_size,
+        "gradient_accumulation_steps": config.gradient_accumulation_steps,
+        "effective_batch_size": config.batch_size * config.gradient_accumulation_steps,
         "learning_rate": config.learning_rate,
         "weight_decay": config.weight_decay,
         "momentum": config.momentum if config.optimizer_name == "sgd_momentum" else None,
+        "scheduler_type": config.scheduler_type if scheduler is not None else None,
+        "warmup_ratio": config.warmup_ratio if scheduler is not None else None,
+        "max_grad_norm": config.max_grad_norm,
+        "use_amp": amp_enabled,
         "train_examples": len(train_dataframe),
         "validation_examples": len(validation_dataframe),
         "parameter_counts": parameter_counts,
@@ -365,6 +537,16 @@ def train_with_optimizer(config):
         "final_train_loss": final_train_loss,
         "final_validation_loss": final_validation_loss,
         "final_validation_perplexity": final_validation_perplexity,
+        "average_step_ms": compute_loss(
+            [item["avg_step_ms"] for item in epoch_metrics if item.get("avg_step_ms") is not None]
+        ),
+        "average_tokens_per_second": compute_loss(
+            [
+                item["tokens_per_second"]
+                for item in epoch_metrics
+                if item.get("tokens_per_second") is not None
+            ]
+        ),
         "training_time_seconds": training_time_seconds,
         "training_examples_per_second": training_examples_per_second,
         "memory_usage": compute_memory_usage(device),
@@ -384,6 +566,18 @@ def train_with_optimizer(config):
         metrics_dir=config.metrics_dir,
         optimizer_name=config.optimizer_name,
     )
+
+    if config.save_prediction_preview:
+        save_prediction_preview(
+            predictions=prediction_preview,
+            metrics_dir=config.metrics_dir,
+            optimizer_name=config.optimizer_name,
+        )
+
+    summary_path = summarize_metrics(config.metrics_dir)
+    if summary_path is not None:
+        print(f"Updated optimizer summary: {summary_path}")
+
     print(f"Saved metrics to {metrics_path}")
     print(f"Completed fine-tuning with optimizer: {config.optimizer_name}")
 

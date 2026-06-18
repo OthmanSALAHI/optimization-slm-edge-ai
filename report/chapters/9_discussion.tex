@@ -1,0 +1,112 @@
+\chapter{Discussion}
+
+\vspace*{1cm}
+
+The experimental results show that optimizer choice has a strong influence on
+both fine-tuning quality and computational efficiency. This chapter discusses the
+main observations obtained from the benchmark and interprets them in the context
+of Edge AI deployment.
+
+\section{Quality and Efficiency Tradeoff}
+
+The most important observation is the tradeoff between model quality and resource
+efficiency. Adam achieves the best training and validation losses, which means it
+is the most effective optimizer for improving the model during the benchmark.
+However, Adam is also slower than SGD-based methods and produces higher inference
+latency in the experiment.
+
+\vspace*{0.5cm}
+
+This result shows that the best optimizer depends on the target objective. If the
+priority is to obtain the lowest validation loss, Adam is the strongest choice.
+If the priority is to reduce latency, memory usage, and computational cost, SGD
+or SGD with momentum may be more appropriate.
+
+\section{Behavior of SGD-Based Methods}
+
+SGD gives good efficiency results. It has low training step latency, high
+throughput, and lower VRAM usage compared with the more complex optimizers. This
+makes it attractive for constrained environments where computation and memory are
+limited.
+
+\vspace*{0.5cm}
+
+SGD with momentum improves the validation loss compared with plain SGD while
+keeping a reasonable latency and memory cost. This suggests that momentum helps
+the optimizer move more effectively in the parameter space without adding too
+much overhead. For Edge AI, this makes SGD with momentum a strong compromise
+between performance and efficiency.
+
+\section{Behavior of Adam and AdamW}
+
+Adam clearly provides the best optimization quality in the benchmark. Its
+adaptive learning rate mechanism allows it to update parameters more effectively
+than SGD-based methods during the limited number of steps. This explains the
+strong decrease in both training loss and validation loss.
+
+\vspace*{0.5cm}
+
+However, Adam requires additional optimizer states and has a higher computational
+cost. The benchmark shows that it is slower and has higher inference latency than
+SGD-based methods. AdamW with clipping and scheduling gives a more balanced
+result. It does not reach the same validation loss as Adam, but it keeps better
+efficiency and may represent a useful compromise in future experiments.
+
+\section{Limits of Second-Order Methods}
+
+L-BFGS and Newton-CG are important from a theoretical optimization perspective,
+but the results show that they are less practical for this fine-tuning setup.
+L-BFGS uses much more VRAM than first-order methods and does not significantly
+improve the validation loss. Newton-CG is even more expensive, with the highest
+step latency and the lowest throughput.
+
+\vspace*{0.5cm}
+
+These observations confirm that second-order or quasi-Newton methods are not
+always suitable for transformer fine-tuning. Their theoretical advantages can be
+limited by the high computational cost of applying them to models with many
+parameters.
+
+\section{Edge AI Interpretation}
+
+In an Edge AI context, the final decision cannot be based only on validation loss.
+The model must also be efficient enough to run under hardware constraints.
+Latency, memory usage, and throughput are therefore essential criteria.
+
+\vspace*{0.5cm}
+
+From this perspective, Adam is useful as a quality baseline, but it may not be the
+best choice if deployment efficiency is the main goal. SGD and SGD with momentum
+are more attractive for constrained environments because they require less memory
+and provide faster execution. AdamW with clipping and scheduling can also be
+considered as a balanced candidate.
+
+\section{Implications for Compression}
+
+The results also provide a baseline for future compression work. Compression
+techniques such as quantization or pruning should ideally start from a model that
+already has good performance and acceptable efficiency. If the fine-tuned model is
+too slow or too memory-intensive before compression, deployment may remain
+difficult even after optimization.
+
+\vspace*{0.5cm}
+
+Adam can be selected when the objective is to maximize quality before applying
+compression. On the other hand, SGD with momentum or AdamW may be selected when
+the goal is to start from a model that already has a better balance between
+quality and resource usage.
+
+\section{Overall Discussion}
+
+Overall, the benchmark confirms that there is no single optimizer that is best
+for every criterion. Adam gives the best validation performance, SGD gives strong
+efficiency, SGD with momentum improves the SGD baseline, and AdamW gives a
+reasonable balance. L-BFGS and Newton-CG are less suitable for this practical
+fine-tuning scenario.
+
+\vspace*{0.5cm}
+
+Therefore, the best optimizer should be chosen according to the target use case.
+For pure fine-tuning quality, Adam is preferred. For Edge AI efficiency, SGD with
+momentum or AdamW with clipping and scheduling may be more appropriate. This
+tradeoff is central to the optimization and compression of Small Language Models.

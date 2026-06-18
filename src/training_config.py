@@ -18,10 +18,16 @@ class TrainingConfig:
     momentum: float = 0.9
     batch_size: int = 4
     epochs: int = 2
+    gradient_accumulation_steps: int = 1
+    max_grad_norm: float = 1.0
     max_input_length: int = 256
     max_target_length: int = 128
     seed: int = 42
     require_gpu: bool = True
+    use_amp: bool = True
+    num_workers: int = 0
+    scheduler_type: str = "linear"
+    warmup_ratio: float = 0.06
     max_train_examples: int | None = None
     max_validation_examples: int | None = None
     max_eval_batches: int | None = None
@@ -29,6 +35,7 @@ class TrainingConfig:
     generation_max_new_tokens: int = 128
     lbfgs_max_iter: int = 4
     lbfgs_history_size: int = 10
+    save_prediction_preview: bool = True
 
 
 SUPPORTED_OPTIMIZERS = (

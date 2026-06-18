@@ -53,6 +53,12 @@ Run every runnable optimizer:
 python src/train.py --optimizer all
 ```
 
+Recommended GPU command for a fair small experiment:
+
+```bash
+python src/train.py --optimizer all --batch_size 4 --gradient_accumulation_steps 2 --epochs 2 --learning_rate 5e-5
+```
+
 By default, the script requires a CUDA GPU. It will stop if no GPU is available.
 
 For CPU debugging only:
@@ -88,5 +94,13 @@ The metrics include:
 - latency
 - energy consumption estimate when NVIDIA power telemetry is available
 - compression/performance baseline for later quantization comparison
+
+The script also updates:
+
+```text
+results/metrics/optimizer_summary.csv
+```
+
+This file is the easiest file to use for comparing optimizers in a report.
 
 Newton-CG is kept in the optimizer list for theoretical comparison, but it is not implemented because standard PyTorch fine-tuning for transformer models does not provide a practical Newton-CG optimizer.
