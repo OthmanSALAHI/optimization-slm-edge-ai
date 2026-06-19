@@ -1,6 +1,6 @@
 \chapter{Theoretical Background}
 
-\vspace*{1cm}
+\vspace*{0.3cm}
 
 This chapter presents the main theoretical concepts used in the project. The work
 is based on three connected ideas: Small Language Models, fine-tuning, and
@@ -15,7 +15,7 @@ useful natural language processing capabilities while requiring fewer
 computational resources. This makes them more suitable for limited environments,
 such as personal computers, embedded systems, mobile devices, and edge platforms.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 In this project, the selected model is \texttt{google/flan-t5-small}. It belongs
 to the T5 family, where many language tasks are represented as text-to-text
@@ -31,7 +31,7 @@ existing learned parameters and updates them using a smaller target dataset. Thi
 approach reduces training cost and usually improves performance on the target
 task.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 For instruction tuning, each training example contains an input prompt and an
 expected answer. In this project, the prompt is stored in the \texttt{source\_text}
@@ -46,7 +46,7 @@ devices instead of relying only on cloud computing. This can improve latency,
 privacy, autonomy, and availability. However, edge devices generally have limited
 memory, processing power, and energy capacity.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 Because of these constraints, the evaluation of a language model should not be
 limited to accuracy or loss. It is also important to consider model size,
@@ -61,7 +61,7 @@ The objective is to minimize the loss function, which measures the difference
 between the model prediction and the expected output. The choice of optimizer can
 strongly affect training speed, stability, memory usage, and final performance.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 This project studies several optimization methods. Stochastic Gradient Descent is
 a simple and classical method based on gradient updates. SGD with momentum
@@ -80,7 +80,7 @@ quantization, pruning, and knowledge distillation. Although this project mainly
 focuses on fine-tuning and optimizer comparison, the collected metrics provide a
 baseline for future compression experiments.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 The theoretical foundation of this work is therefore centered on finding a balance
 between model quality and efficiency. This balance is essential when preparing

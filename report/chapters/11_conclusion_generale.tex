@@ -1,0 +1,60 @@
+\chapter{General Conclusion}
+
+\vspace*{0.3cm}
+
+This project focused on the optimization and compression perspective of Small
+Language Models for Edge AI applications. The main objective was to prepare and
+fine-tune \texttt{google/flan-t5-small} on an instruction-following dataset and
+to compare different optimization algorithms according to both model quality and
+resource efficiency.
+
+\vspace*{0.15cm}
+
+The first part of the work consisted of preparing the dataset
+\texttt{yahma/alpaca-cleaned}. The original examples were cleaned, shuffled, and
+converted into an instruction-tuning format using \texttt{source\_text} as the
+model input and \texttt{target\_text} as the expected output. The processed data
+was divided into training, validation, and test subsets, then saved in
+\texttt{CSV} and \texttt{JSONL} formats.
+
+\vspace*{0.15cm}
+
+The second part of the project focused on the fine-tuning methodology. A training
+pipeline was implemented to load the model, tokenize the dataset, select an
+optimizer, run the training loop, evaluate the model, and save the resulting
+metrics. The tested optimization methods included SGD, SGD with momentum, Adam,
+AdamW with clipping and scheduling, L-BFGS, and Newton-CG.
+
+\vspace*{0.15cm}
+
+The experimental results showed a clear tradeoff between fine-tuning quality and
+computational efficiency. Adam achieved the best training and validation losses,
+which makes it the strongest optimizer in terms of model quality. However, it was
+not the most efficient method in terms of latency and throughput. SGD and SGD with
+momentum provided better efficiency, lower latency, and lower memory usage, making
+them more suitable for constrained environments.
+
+\vspace*{0.15cm}
+
+The results also confirmed that L-BFGS and Newton-CG are less practical for this
+type of transformer fine-tuning. Although these methods are important from a
+theoretical optimization perspective, their high computational cost and memory
+requirements make them difficult to use in an Edge AI context.
+
+\vspace*{0.15cm}
+
+Overall, the project demonstrates that optimizer selection must depend on the
+target objective. If the priority is fine-tuning quality, Adam is the best
+choice. If the priority is efficiency for Edge AI deployment, SGD with momentum or
+AdamW with clipping and scheduling can offer a better compromise. This conclusion
+is important because Edge AI systems require models that are not only accurate,
+but also fast, compact, and resource-efficient.
+
+\vspace*{0.15cm}
+
+As future work, the fine-tuned models can be further optimized using compression
+techniques such as quantization, pruning, or knowledge distillation. These methods
+could reduce model size, memory usage, and inference latency while preserving an
+acceptable level of performance. This would complete the transition from
+optimizer comparison to practical deployment of Small Language Models on edge
+devices.

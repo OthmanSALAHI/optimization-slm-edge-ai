@@ -10,7 +10,7 @@ instruction-following language model, \texttt{google/flan-t5-small}, and to stud
 the impact of different optimization algorithms on training quality and resource
 efficiency.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 The dataset used in this work is \texttt{yahma/alpaca-cleaned}, which was processed
 into training, validation, and test subsets. Each example was transformed into an
@@ -20,7 +20,7 @@ including Stochastic Gradient Descent, SGD with momentum, Adam, and L-BFGS. Newt
 is also discussed from a theoretical perspective because it is not practical for
 standard transformer fine-tuning in this context.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 The comparison is based on criteria that are important for Edge AI deployment:
 validation loss, perplexity, training time, training speed, memory consumption,
@@ -28,7 +28,7 @@ model size, inference time, latency, and energy consumption when power telemetry
 available. These metrics make it possible to analyze the tradeoff between model
 quality and computational efficiency.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 This report presents the project context, the data preparation process, the
 fine-tuning methodology, the optimization algorithms studied, and the evaluation

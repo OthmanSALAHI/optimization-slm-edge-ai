@@ -1,0 +1,56 @@
+\chapter{Evaluation and Experimental Results}
+
+\vspace*{0.3cm}
+
+The evaluation combines model quality and efficiency metrics. Validation loss
+measures generalization on unseen data, while perplexity gives a language-modeling
+interpretation of the loss. Efficiency is measured using training step latency,
+inference latency, throughput, and peak VRAM usage. These metrics are important
+because Edge AI models must be deployable under memory and latency constraints.
+
+The benchmark was executed on a performant GPU using 10 training steps and a
+batch size of 4. The tested configurations were inference-only baseline, SGD, SGD
+with momentum, Adam, AdamW with clipping and scheduler, L-BFGS, and Newton-CG.
+Figure~\ref{fig:optimizer_comparison_matrix} summarizes the complete comparison.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{chapters/images/optimizer_comparison_matrix.png}
+    \caption{Comparison matrix of the optimizer benchmark results.}
+    \label{fig:optimizer_comparison_matrix}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \scriptsize
+    \begin{tabular}{lrrrrrr}
+        \toprule
+        \textbf{Optimizer} & \textbf{Train Loss} & \textbf{Val Loss} &
+        \textbf{Step ms} & \textbf{Inf. ms} & \textbf{Tok/s} &
+        \textbf{VRAM MB} \\
+        \midrule
+        Inference Only & 10.9235 & 10.8968 & 76.43 & 224.15 & 20096.52 & 553.23 \\
+        SGD & 10.8635 & 10.8049 & 84.97 & 211.06 & 18076.50 & 1459.34 \\
+        SGD + Momentum & 10.7055 & 10.5485 & 92.56 & 216.98 & 16595.08 & 1714.17 \\
+        Adam & 9.4310 & 9.2548 & 190.80 & 1246.35 & 8050.34 & 1969.00 \\
+        AdamW + Clip + Sched & 10.2606 & 10.0681 & 112.17 & 217.35 & 13693.65 & 1969.00 \\
+        L-BFGS & 10.9365 & 10.8968 & 248.46 & 228.55 & 6182.03 & 5281.85 \\
+        Newton-CG & 10.9030 & 10.1138 & 1445.42 & 1276.49 & 1062.67 & 6334.53 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Numerical summary of the optimizer benchmark.}
+    \label{tab:benchmark_results}
+\end{table}
+
+Adam obtains the best model quality with a final training loss of 9.4310 and a
+validation loss of 9.2548. SGD with momentum improves over plain SGD, reaching a
+validation loss of 10.5485 compared with 10.8049 for SGD. AdamW with clipping and
+scheduling gives an intermediate result, with better quality than SGD but better
+efficiency than Adam.
+
+From an efficiency perspective, SGD is the fastest trained optimizer, with 84.97
+ms per step, 211.06 ms inference latency, and 18076.50 tokens per second. SGD
+with momentum remains efficient, while Adam is slower and shows high inference
+latency. L-BFGS and Newton-CG are the least practical methods because they require
+high VRAM and have much higher training latency. Newton-CG reaches 6334.53 MB of
+VRAM and 1445.42 ms per step, which is not suitable for Edge AI constraints.

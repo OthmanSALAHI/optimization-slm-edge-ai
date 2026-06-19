@@ -1,4 +1,4 @@
-\documentclass[12pt,a4paper]{report}
+\documentclass[11pt,a4paper]{report}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -17,9 +17,12 @@
 \usepackage{tabularx}
 \usepackage{titlesec}
 \usepackage{fancyhdr}
+\usepackage{setspace}
 \graphicspath{{../metrics/}{metrics/}{../assets/figures/}{assets/figures/}{./}}
 
-\geometry{margin=2.5cm}
+\geometry{margin=2cm}
+\setstretch{0.94}
+\setlist{nosep}
 \hypersetup{
     colorlinks=true,
     linkcolor=black,
@@ -82,11 +85,14 @@
     \renewcommand{\footrulewidth}{0.5pt}
 }
 
+\titleclass{\chapter}{straight}
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries}
   {\color{chapterBlue}\chaptertitlename\ \thechapter}
-  {20pt}
+  {10pt}
   {\Huge\bfseries}
+\titlespacing*{\chapter}{0pt}{-10pt}{20pt}
+\titlespacing*{\section}{0pt}{8pt}{5pt}
 
 \begin{document}
 
@@ -142,41 +148,17 @@
 \input{chapters/0_abbreviations}
 
 \clearpage
-\input{chapters/1_introduction_generale}
+\input{chapters/1_context_and_objectives}
 
-\clearpage
-\input{chapters/2_contexte_theorique}
+\input{chapters/2_project_and_data}
 
-\clearpage
-\input{chapters/3_presentation_du_projet}
+\input{chapters/3_methodology_and_optimizers}
 
-\clearpage
-\input{chapters/4_preparation_des_donnees}
+\input{chapters/4_evaluation_and_results}
 
-\clearpage
-\input{chapters/5_methodologie_fine_tuning}
+\input{chapters/5_discussion_limitations_conclusion}
 
-\clearpage
-\input{chapters/6_algorithmes_optimisation}
-
-\clearpage
-\input{chapters/7_criteres_evaluation}
-
-\clearpage
-\input{chapters/8_resultats_experimentaux}
-
-\clearpage
-\input{chapters/9_discussion}
-
-\clearpage
-\input{chapters/10_limites_du_travail}
-
-% \clearpage
-% \input{chapters/11_conclusion_generale}
-
-% \appendix
-% \clearpage
-% \input{chapters/12_annexes}
+\input{chapters/12_bibliographie}
 
 \end{document}
 

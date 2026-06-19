@@ -1,6 +1,6 @@
 \chapter{Project Overview}
 
-\vspace*{1cm}
+\vspace*{0.3cm}
 
 This chapter presents the general structure of the project, its objectives, the
 model used, the dataset selected, and the main workflow followed during the
@@ -15,7 +15,7 @@ quality and computational efficiency. The work does not only focus on improving
 the training loss, but also on evaluating practical constraints such as memory
 usage, inference latency, model size, and training speed.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 This objective is important because Edge AI environments require efficient models
 that can run under limited hardware resources. A model that performs well but
@@ -29,7 +29,7 @@ is a small version of the FLAN-T5 family and is designed for text-to-text tasks.
 It is already instruction-tuned, which means that it can understand and respond to
 natural language instructions.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 The choice of \texttt{flan-t5-small} is suitable for this project because it
 provides a compromise between language understanding capability and computational
@@ -43,7 +43,7 @@ instruction-following dataset composed of examples containing instructions,
 optional inputs, and expected outputs. This type of data is appropriate for
 fine-tuning an instruction-following language model.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 The dataset was processed into three subsets:
 
@@ -53,7 +53,7 @@ The dataset was processed into three subsets:
     \item Test set: 500 examples.
 \end{itemize}
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 The processed files are stored in the \texttt{data/processed/} directory in both
 \texttt{CSV} and \texttt{JSONL} formats. The training pipeline uses the
@@ -68,7 +68,7 @@ Second, the tokenizer and the model are loaded from Hugging Face. Third, the
 training script fine-tunes the model using the selected optimizer. Finally, the
 trained model and the evaluation metrics are saved for comparison.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 The general workflow can be summarized as follows:
 
@@ -98,7 +98,7 @@ folder contains the processed dataset. The \texttt{results/} folder is reserved
 for trained models, logs, checkpoints, and metrics. The \texttt{docs/} folder
 contains project documentation.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 The main source files used in the project are:
 
@@ -119,7 +119,7 @@ metrics file. These outputs make it possible to compare the optimization
 algorithms and identify which one provides the best compromise between model
 performance and resource efficiency.
 
-\vspace*{0.5cm}
+\vspace*{0.15cm}
 
 This comparison prepares the project for a future compression phase, where the
 fine-tuned models can be further optimized using techniques such as quantization

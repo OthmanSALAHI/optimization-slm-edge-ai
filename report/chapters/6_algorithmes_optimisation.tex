@@ -1,144 +1,74 @@
 \chapter{Optimization Algorithms}
 
-\vspace*{1cm}
+\vspace*{0.3cm}
 
-Optimization algorithms play a central role in the training of neural networks.
-During fine-tuning, the model parameters are updated in order to minimize the loss
-function. The choice of optimizer can influence convergence speed, training
-stability, memory consumption, and final model performance. This chapter presents
-the optimization methods studied in this project.
+Optimization algorithms update the model parameters during training in order to
+minimize the loss function. In this project, the optimizers are compared not only
+according to model quality, but also according to latency, memory usage, and
+throughput.
 
 \section{Stochastic Gradient Descent}
 
-Stochastic Gradient Descent is one of the most fundamental optimization
-algorithms in machine learning. It updates the model parameters using the gradient
-of the loss function computed on mini-batches of training data.
-
-\vspace*{0.5cm}
-
-The update rule can be written as:
+Stochastic Gradient Descent updates the parameters using the gradient of the loss
+computed on mini-batches:
 
 \begin{equation}
     \theta_{t+1} = \theta_t - \eta \nabla_{\theta} L(\theta_t)
 \end{equation}
 
-where \(\theta_t\) represents the model parameters at step \(t\), \(\eta\) is the
-learning rate, and \(\nabla_{\theta} L(\theta_t)\) is the gradient of the loss
-function with respect to the parameters.
-
-\vspace*{0.5cm}
-
-SGD is simple and memory-efficient, but it can converge slowly and may be
-sensitive to the choice of learning rate. In transformer fine-tuning, plain SGD
-is generally less stable than adaptive methods, but it remains useful as a
-baseline optimizer.
+SGD is simple and memory-efficient, but it can converge slowly and is sensitive
+to the learning rate. It is used in this project as a basic first-order baseline.
 
 \section{SGD with Momentum}
 
-SGD with momentum improves classical SGD by accumulating part of the previous
-update direction. This helps accelerate learning in consistent gradient
-directions and reduces oscillations during optimization.
-
-\vspace*{0.5cm}
-
-The update rule is:
+SGD with momentum improves SGD by accumulating part of the previous update
+direction:
 
 \begin{align}
     v_{t+1} &= \mu v_t + \nabla_{\theta} L(\theta_t) \\
     \theta_{t+1} &= \theta_t - \eta v_{t+1}
 \end{align}
 
-where \(v_t\) is the velocity term and \(\mu\) is the momentum coefficient.
+The momentum term helps reduce oscillations and can accelerate convergence while
+keeping the method relatively efficient.
 
-\vspace*{0.5cm}
+\section{Adam and AdamW}
 
-Momentum can improve convergence compared with plain SGD. However, it still uses
-a global learning rate and does not adapt the learning rate independently for
-each parameter. This can make it less flexible for large transformer models.
-
-\section{Adam Optimizer}
-
-Adam, which stands for Adaptive Moment Estimation, is one of the most widely used
-optimizers in deep learning. It combines ideas from momentum and adaptive learning
-rates. Adam keeps an exponential moving average of both the gradients and the
-squared gradients.
-
-\vspace*{0.5cm}
-
-The main update equations are:
+Adam, or Adaptive Moment Estimation, combines momentum with adaptive learning
+rates. It maintains moving averages of gradients and squared gradients:
 
 \begin{align}
     m_t &= \beta_1 m_{t-1} + (1 - \beta_1) g_t \\
     v_t &= \beta_2 v_{t-1} + (1 - \beta_2) g_t^2
 \end{align}
 
-where \(g_t\) is the gradient at step \(t\), \(m_t\) is the first moment estimate,
-and \(v_t\) is the second moment estimate.
-
-\vspace*{0.5cm}
-
-Adam is generally well suited for transformer fine-tuning because it adapts the
-learning rate for each parameter and often converges faster than SGD-based
-methods. For this reason, it is commonly used as a strong baseline in language
-model training.
+Adam is widely used for transformer fine-tuning because it often converges faster
+than SGD. AdamW is a variant that decouples weight decay from the gradient update,
+which can improve regularization and training stability.
 
 \section{L-BFGS}
 
-L-BFGS, or Limited-memory Broyden-Fletcher-Goldfarb-Shanno, is a quasi-Newton
-optimization algorithm. Unlike SGD and Adam, which mainly rely on first-order
-gradients, L-BFGS approximates second-order curvature information in order to
-improve the search direction.
-
-\vspace*{0.5cm}
-
-The method does not store the full Hessian matrix. Instead, it keeps a limited
-history of previous parameter and gradient differences. This makes it more memory
-efficient than full Newton methods while still using curvature information.
-
-\vspace*{0.5cm}
-
-In this project, L-BFGS is included because it is important from an optimization
-course perspective. However, it is usually expensive for transformer fine-tuning.
-It requires closure-based optimization steps and may perform several evaluations
-of the loss during a single update. This can increase training time compared with
-optimizers such as Adam.
+L-BFGS is a quasi-Newton method that approximates second-order curvature
+information without storing the full Hessian matrix. It can be useful in some
+optimization problems, but it is expensive for transformer fine-tuning because it
+requires closure-based steps and repeated loss evaluations.
 
 \section{Newton-CG}
 
-Newton-CG, or Newton Conjugate Gradient, is a second-order optimization method.
-It is based on Newton's method and uses conjugate gradient techniques to solve the
-linear system involving the Hessian matrix.
-
-\vspace*{0.5cm}
-
-The ideal Newton update can be expressed as:
+Newton-CG is a second-order method based on Newton's update:
 
 \begin{equation}
     \theta_{t+1} = \theta_t - H^{-1} \nabla_{\theta} L(\theta_t)
 \end{equation}
 
-where \(H\) is the Hessian matrix of second derivatives.
-
-\vspace*{0.5cm}
-
-Although Newton-CG can be powerful for some optimization problems, it is not
-practical for standard fine-tuning of transformer models in this project. The
-method requires Hessian-vector products and second-order computations that are
-expensive for models with many parameters. For this reason, Newton-CG is kept for
-theoretical discussion only and is not implemented in the training pipeline.
+where \(H\) is the Hessian matrix. In practice, this method is costly for models
+with many parameters because it requires second-order information. In this
+project, it is mainly kept for academic comparison.
 
 \section{Comparison Perspective}
 
-The selected optimizers represent different families of optimization methods.
-SGD is a simple first-order baseline. SGD with momentum improves the direction of
-updates by using past gradients. Adam introduces adaptive learning rates and is
-commonly used in transformer training. L-BFGS brings a quasi-Newton perspective,
-while Newton-CG represents a theoretical second-order method.
-
-\vspace*{0.5cm}
-
-The comparison between these optimizers is important for understanding the
-tradeoff between training quality and computational efficiency. In the context of
-Edge AI, the best optimizer is not only the one that gives the lowest validation
-loss, but also the one that offers a good balance between performance, training
-time, memory usage, and inference efficiency.
+SGD and SGD with momentum represent efficient first-order methods. Adam and AdamW
+represent adaptive optimizers commonly used in deep learning. L-BFGS and
+Newton-CG represent quasi-second-order and second-order optimization methods.
+Their comparison helps identify the best compromise between quality and
+efficiency for Edge AI-oriented fine-tuning.

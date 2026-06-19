@@ -1,0 +1,33 @@
+\chapter{Discussion and Conclusion}
+
+\vspace*{0.3cm}
+
+The results show a clear tradeoff between model quality and computational
+efficiency. Adam is the best optimizer for reducing training and validation loss,
+which makes it the strongest quality baseline. However, it is slower than
+SGD-based methods and has higher inference latency. For Edge AI, the best
+optimizer is not necessarily the one with the lowest loss, because deployment
+also depends on latency, throughput, memory usage, and model size.
+
+SGD gives the best efficiency among the trained optimizers, while SGD with
+momentum improves the validation loss with only a moderate increase in cost.
+AdamW with clipping and scheduling is also a useful compromise because it gives
+better quality than SGD while remaining more efficient than Adam. L-BFGS and
+Newton-CG are important from an optimization theory perspective, but their high
+memory and computational costs make them less practical for transformer
+fine-tuning in an Edge AI context.
+
+The project has several limitations. The dataset is intentionally small, with
+2000 training examples and 500 validation/test examples. The benchmark is also
+short, using only 10 training steps and a batch size of 4, so it compares early
+optimizer behavior rather than complete convergence. The results also depend on
+the GPU used during execution, and energy consumption could not be fully analyzed
+without reliable power telemetry.
+
+Overall, the project demonstrates that optimizer selection must be guided by the
+target objective. Adam should be selected when fine-tuning quality is the main
+priority. SGD with momentum or AdamW are better candidates when the objective is
+to balance quality and efficiency for Edge AI deployment. The results provide a
+baseline for future compression techniques such as quantization, pruning, and
+knowledge distillation, which can further reduce memory usage and latency while
+preserving acceptable model quality.

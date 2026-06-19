@@ -1,0 +1,34 @@
+\chapter{Context and Objectives}
+
+\vspace*{0.3cm}
+
+Artificial Intelligence has become an important technology in modern applications,
+especially with the development of language models capable of understanding
+instructions and generating natural language responses. However, large language
+models require significant computation, memory, and energy, which makes their
+deployment difficult on constrained devices. Edge AI addresses this limitation by
+executing models directly on local devices such as embedded systems, sensors, or
+small computing boards. This improves latency, autonomy, and privacy, but it also
+requires models that are compact and efficient \cite{edgeai}.
+
+Small Language Models are therefore useful because they provide language
+capabilities with a lower computational cost than large models. In this project,
+the selected model is \texttt{google/flan-t5-small}, a compact instruction-tuned
+model from the T5 family \cite{flant5model}. T5 represents tasks in a
+text-to-text format, which is well suited for instruction-following data
+\cite{t5}. Fine-tuning is used to adapt this pre-trained model to the prepared
+dataset instead of training a model from scratch.
+
+The objective of this work is to study the optimization of a Small Language Model
+for Edge AI applications. The project prepares an instruction-tuning dataset,
+fine-tunes \texttt{google/flan-t5-small}, and compares several optimization
+algorithms: SGD, SGD with momentum, Adam, AdamW with clipping and scheduling,
+L-BFGS, and Newton-CG. The comparison is not based only on validation loss, but
+also on training latency, inference latency, throughput, and GPU memory usage.
+These criteria are essential because an Edge AI model must be accurate, fast, and
+resource-efficient.
+
+The work also prepares a baseline for future compression. Techniques such as
+quantization, pruning, and knowledge distillation are not fully implemented in
+this report, but the optimizer comparison helps identify which fine-tuned model
+would be the best candidate for later compression experiments.
